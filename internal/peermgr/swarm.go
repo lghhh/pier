@@ -48,10 +48,21 @@ func New(config *repo.Config, privKey crypto.PrivateKey) (*Swarm, error) {
 	if err != nil {
 		return nil, fmt.Errorf("convert private key: %w", err)
 	}
-
-	local, remotes, err := loadPeers(config.Mode.Direct.Peers, libp2pPrivKey)
-	if err != nil {
-		return nil, fmt.Errorf("load peers: %w", err)
+	var local string
+	var remotes map[string]*peer.AddrInfo
+	switch config.Mode.Type {
+	case repo.UnionMode:
+		local, remotes, err = loadPeers(config.Mode.Union.Connectors, libp2pPrivKey)
+		if err != nil {
+			return nil, fmt.Errorf("load peers: %w", err)
+		}
+	case repo.DirectMode:
+		local, remotes, err = loadPeers(config.Mode.Direct.Peers, libp2pPrivKey)
+		if err != nil {
+			return nil, fmt.Errorf("load peers: %w", err)
+		}
+	default:
+		return nil, fmt.Errorf("unsupport mode type")
 	}
 
 	var protocolIDs = []string{protocolID}
@@ -59,6 +70,7 @@ func New(config *repo.Config, privKey crypto.PrivateKey) (*Swarm, error) {
 	p2p, err := network.New(
 		network.WithLocalAddr(local),
 		network.WithPrivateKey(libp2pPrivKey),
+		network.WithBootstrap(config.Mode.Relay.BootStraps),
 		network.WithProtocolIDs(protocolIDs),
 	)
 	if err != nil {
@@ -170,6 +182,19 @@ func (swarm *Swarm) SendWithStream(s network2.Stream, msg *peermgr.Message) (*pe
 		return nil, err
 	}
 	return recvMsg, nil
+}
+
+func (swarm *Swarm) Connect(addrInfo *peer.AddrInfo) error {
+	err := swarm.p2p.Connect(*addrInfo)
+	if err != nil {
+		return err
+	}
+	pierId, err := swarm.getRemoteAddress(addrInfo.ID)
+	if err != nil {
+		return err
+	}
+	swarm.connectedPeers.Store(pierId, addrInfo)
+	return nil
 }
 
 func (swarm *Swarm) AsyncSendWithStream(s network2.Stream, msg *peermgr.Message) error {
@@ -366,4 +391,19 @@ func (swarm *Swarm) RegisterConnectHandler(handler ConnectHandler) error {
 	swarm.connectHandlers = append(swarm.connectHandlers, handler)
 
 	return nil
+}
+func (swarm *Swarm) FindProviders(key string, count int) ([]peer.AddrInfo, error) {
+	peerC, err := swarm.p2p.FindProvidersAsync(key, count)
+	if err != nil {
+		return nil, err
+	}
+	peers := make([]peer.AddrInfo, 0)
+	for p := range peerC {
+		peers = append(peers, p)
+	}
+	return peers, nil
+}
+
+func (swarm *Swarm) Provider(key string, passed bool) error {
+	return swarm.p2p.Provider(key, passed)
 }
