@@ -33,5 +33,3 @@ require (
 	golang.org/x/tools v0.0.0-20200102140908-9497f49d5709 // indirect
 	google.golang.org/grpc v1.27.1
 )
-
-replace github.com/meshplus/go-lightp2p => ../go-lightp2p

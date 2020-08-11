@@ -89,6 +89,7 @@ func genKeysAndConfig(t *testing.T, peerCnt int) ([]crypto.PrivateKey, *repo.Con
 
 	config := &repo.Config{}
 	config.Mode.Direct.Peers = peers
+	config.Mode.Type = repo.DirectMode
 
 	return keys, config, ids
 }

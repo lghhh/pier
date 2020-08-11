@@ -257,10 +257,7 @@ func NewUnionPier(repoRoot string, config *repo.Config) (*Pier, error) {
 	}
 
 	// agent queries appchain info from bitxhub
-	meta, err = ag.GetInterchainMeta()
-	if err != nil {
-		return nil, err
-	}
+	meta = &rpcx.Interchain{}
 
 	lite, err = bxh_lite.New(ag, store)
 	if err != nil {
