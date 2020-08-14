@@ -28,7 +28,15 @@ require (
 	golang.org/x/sys v0.0.0-20200509044756-6aff5f38e54f // indirect
 )
 
-replace github.com/hyperledger/fabric => github.com/hyperledger/fabric v2.0.1+incompatible
+replace github.com/hyperledger/fabric => ../../hyperledger/fabric
+
+replace github.com/meshplus/bitxhub-core => ../bitxhub-core
+
+replace github.com/hyperledger/fabric-protos-go => github.com/hyperledger/fabric-protos-go v0.0.0-20200330074707-cfe579e86986
+
+replace go.uber.org/zap => go.uber.org/zap v1.9.1
+
+replace github.com/sykesm/zap-logfmt => github.com/sykesm/zap-logfmt v0.0.1
 
 replace golang.org/x/net => golang.org/x/net v0.0.0-20200202094626-16171245cfb2
 
